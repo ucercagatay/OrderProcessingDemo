@@ -4,10 +4,10 @@ using OrderService.Application.Mappings;
 
 namespace OrderService.Application.Services;
 
-public class OrdderAppService:IOrderService
+public class OrderAppService:IOrderService
 {
     private readonly IOrderRepository _orderRepository;
-    public OrdderAppService(IOrderRepository orderRepository)
+    public OrderAppService(IOrderRepository orderRepository)
     {
         _orderRepository = orderRepository;
     }
