@@ -8,6 +8,15 @@ public class Order : BaseEntity
     
     public decimal Price { get; set; }
     
-    public OrderStatus Status { get; set; }
-    
+    public OrderStatus Status { get; private set; }
+    public Order(Guid customerId, Guid productId, int quantity, decimal price)
+    {
+        CustomerId = customerId;
+        ProductId = productId;
+        Quantity = quantity;
+        Price = price;
+        Status = OrderStatus.Pending;  
+    }
+    private Order() { }
+
 }
