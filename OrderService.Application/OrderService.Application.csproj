@@ -9,5 +9,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
-
+  <PropertyGroup>
+    <RootNamespace>OrderService.Application</RootNamespace>
+  </PropertyGroup>
 </Project>

@@ -15,5 +15,7 @@
     <ProjectReference Include="..\OrderService.Application\OrderService.Application.csproj" />
     <ProjectReference Include="..\OrderService.Infrastructure\OrderService.Infrastructure.csproj" />
   </ItemGroup>
-
+  <PropertyGroup>
+    <RootNamespace>OrderService.Api</RootNamespace>
+  </PropertyGroup>
 </Project>
