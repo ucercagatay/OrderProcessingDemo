@@ -7,6 +7,7 @@ public class OrderDbContext :DbContext
 {
     public OrderDbContext(DbContextOptions<OrderDbContext> options) : base(options) {}
     public DbSet<Order> Orders { get; set; }
+    public DbSet<OutboxMessage> OutboxMessages { get; set; }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -23,6 +24,15 @@ public class OrderDbContext :DbContext
                     .HasMaxLength(20);
                 entity.Property(e => e.CreatedAt).IsRequired();
             });
-        
+            modelBuilder.Entity<OutboxMessage>(entity =>
+                {
+                    entity.HasKey(e => e.Id);
+                    entity.Property(e=> e.EventType).IsRequired().HasMaxLength(100);
+                    entity.Property(e => e.Payload).IsRequired();
+                    entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(20);
+                    entity.Property(e=> e.Error).HasMaxLength(500);
+                }
+            );
+
     }
 }
