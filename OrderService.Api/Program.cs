@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using OrderService.Application.Interfaces;
 using OrderService.Application.Services;
+using OrderService.Infrastructure.BackgroundServices;
 using OrderService.Infrastructure.Persistence;
 using OrderService.Infrastructure.Repositories;
 
@@ -15,6 +16,7 @@ builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IOrderService, OrderAppService>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IOutboxRepository, OutboxRepository>();
+builder.Services.AddHostedService<OutboxPublisherService>();
 builder.Services.AddControllers();
 
 
