@@ -1,15 +1,21 @@
+using System.Text.Json;
 using OrderService.Application.DTOs;
 using OrderService.Application.Interfaces;
 using OrderService.Application.Mappings;
+using OrderService.Domain.Entities;
 
 namespace OrderService.Application.Services;
 
 public class OrderAppService:IOrderService
 {
     private readonly IOrderRepository _orderRepository;
-    public OrderAppService(IOrderRepository orderRepository)
+    private readonly IOutboxRepository _outboxRepository;
+    private readonly IUnitOfWork _unitOfWork;
+    public OrderAppService(IOrderRepository orderRepository,IOutboxRepository outboxRepository,IUnitOfWork unitOfWork)
     {
         _orderRepository = orderRepository;
+        _outboxRepository = outboxRepository;
+        _unitOfWork = unitOfWork;
     }
     public async Task<OrderDto?> GetOrderByIdAsync(Guid id, CancellationToken cancellationToken)
     {
@@ -22,6 +28,28 @@ public class OrderAppService:IOrderService
     public async Task<OrderDto> CreateOrderAsync(CreateOrderDto dto, CancellationToken cancellationToken)
     {
         var order = OrderMapper.ToEntity(dto);
+        var payload = JsonSerializer.Serialize(new
+        {
+            OrderId = order.Id,
+            order.CustomerId,
+            order.ProductId,
+            order.Quantity,
+            order.Price
+        });
+        var outboxMessage = new OutboxMessage("OrderCreated", payload);
+        await _unitOfWork.BeginTransactionAsync(cancellationToken);
+        try
+        {
+          await _orderRepository.AddAsync(order, cancellationToken);
+          await _outboxRepository.AddAsync(outboxMessage, cancellationToken);
+          await _unitOfWork.SaveChangesAsync(cancellationToken);
+          await _unitOfWork.CommitAsync(cancellationToken);
+        }
+        catch (Exception e)
+        {
+            await _unitOfWork.RollbackAsync(cancellationToken);
+            throw;
+        }
         await _orderRepository.AddAsync(order, cancellationToken);
         return OrderMapper.ToDto(order);
         

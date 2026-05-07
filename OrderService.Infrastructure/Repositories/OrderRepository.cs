@@ -15,7 +15,6 @@ public class OrderRepository : IOrderRepository
     public async Task<Order> AddAsync(Order order, CancellationToken cancellationToken)
     {
         await _context.Orders.AddAsync(order, cancellationToken);
-        await _context.SaveChangesAsync(cancellationToken);
         return order;
     }
 

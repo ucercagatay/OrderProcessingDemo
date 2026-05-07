@@ -13,6 +13,8 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<OrderDbContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("OrdersDatabase")));
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IOrderService, OrderAppService>();
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<IOutboxRepository, OutboxRepository>();
 builder.Services.AddControllers();
 
 
