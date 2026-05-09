@@ -31,6 +31,7 @@ public class OutboxPublisherService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        _logger.LogInformation("Kafka BootstrapServers: {Servers}", _topic);
         while (!stoppingToken.IsCancellationRequested)
         {
             try

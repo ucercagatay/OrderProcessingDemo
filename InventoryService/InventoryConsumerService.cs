@@ -23,60 +23,59 @@ public class InventoryConsumerService:BackgroundService
         _consumer = new ConsumerBuilder<string, string>(consumerConfig).Build();
         
     }
-    protected override Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _consumer.Subscribe(Topic);
-        _logger.LogInformation("Inventory Service started consuming from {Topic}", Topic);
-
-        while (!stoppingToken.IsCancellationRequested)
+        await Task.Run(() =>
         {
-            try
+            _consumer.Subscribe(Topic);
+            _logger.LogInformation("Inventory Service started consuming from {Topic}", Topic);
+
+            while (!stoppingToken.IsCancellationRequested)
             {
-                var result = _consumer.Consume(stoppingToken);
-
-                if (result?.Message?.Value is null) continue;
-
-                var orderEvent = JsonSerializer.Deserialize<OrderCreatedEvent>(result.Message.Value);
-
-                if (orderEvent is null) continue;
-
-                // Stok kontrol simülasyonu
-                _logger.LogInformation(
-                    "📦 INVENTORY CHECK: OrderId={OrderId}, ProductId={ProductId}, Quantity={Quantity}",
-                    orderEvent.OrderId,
-                    orderEvent.ProductId,
-                    orderEvent.Quantity);
-
-                // Basit simülasyon: quantity > 100 ise stok yetersiz
-                if (orderEvent.Quantity > 100)
+                try
                 {
-                    _logger.LogWarning(
-                        "⚠️ INSUFFICIENT STOCK: OrderId={OrderId}, Requested={Quantity}",
-                        orderEvent.OrderId,
-                        orderEvent.Quantity);
-                }
-                else
-                {
+                    var result = _consumer.Consume(stoppingToken);
+
+                    if (result?.Message?.Value is null) continue;
+
+                    var orderEvent = JsonSerializer.Deserialize<OrderCreatedEvent>(result.Message.Value);
+
+                    if (orderEvent is null) continue;
+
                     _logger.LogInformation(
-                        "✅ STOCK RESERVED: OrderId={OrderId}, Quantity={Quantity}",
+                        "📦 INVENTORY CHECK: OrderId={OrderId}, ProductId={ProductId}, Quantity={Quantity}",
                         orderEvent.OrderId,
+                        orderEvent.ProductId,
                         orderEvent.Quantity);
+
+                    if (orderEvent.Quantity > 100)
+                    {
+                        _logger.LogWarning(
+                            "⚠️ INSUFFICIENT STOCK: OrderId={OrderId}, Requested={Quantity}",
+                            orderEvent.OrderId,
+                            orderEvent.Quantity);
+                    }
+                    else
+                    {
+                        _logger.LogInformation(
+                            "✅ STOCK RESERVED: OrderId={OrderId}, Quantity={Quantity}",
+                            orderEvent.OrderId,
+                            orderEvent.Quantity);
+                    }
+                }
+                catch (ConsumeException ex)
+                {
+                    _logger.LogError(ex, "Error consuming message from Kafka");
+                }
+                catch (OperationCanceledException)
+                {
+                    break;
                 }
             }
-            catch (ConsumeException ex)
-            {
-                _logger.LogError(ex, "Error consuming message from Kafka");
-            }
-            catch (OperationCanceledException)
-            {
-                break;
-            }
-        }
 
-        _consumer.Close();
-        return Task.CompletedTask;
+            _consumer.Close();
+        }, stoppingToken);
     }
-
     public override void Dispose()
     {
         _consumer.Dispose();
